@@ -3,16 +3,17 @@ angular
 	"ui.bootstrap",
 	'webui.services.utils', 'webui.services.rpc', 'webui.services.rpc.helpers', 'webui.services.alerts',
 	'webui.services.settings', 'webui.services.modals', 'webui.services.configuration',
-	'webui.services.errors',
+	'webui.services.errors', 'webui.services.storage'
 ])
 .controller('MainCtrl', [
 	'$scope', '$name', '$enable', '$rpc', '$rpchelpers', '$utils', '$alerts', '$modals',
 	'$fileSettings', '$activeInclude', '$waitingExclude', '$pageSize', '$getErrorStatus',
+	'aria.storage',
 	// for document title
 	'$rootScope',
 function(
 	scope, name, enable, rpc, rhelpers, utils, alerts, modals,
-	fsettings, activeInclude, waitingExclude, pageSize, getErrorStatus,
+	fsettings, activeInclude, waitingExclude, pageSize, getErrorStatus, storage,
 	rootScope
 ) {
 
@@ -243,11 +244,11 @@ function(
 			p: scope.filterPaused,
 			r: scope.filterRemoved
 		});
-		utils.setCookie("aria2filters", o);
+		storage.set("aria2filters", o);
 	};
 
 	scope.loadFilters = function() {
-		var o = JSON.parse(utils.getCookie("aria2filters"));
+		var o = JSON.parse(storage.get("aria2filters"));
 		if (!o) {
 			scope.resetFilters();
 			return;

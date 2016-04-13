@@ -1,12 +1,12 @@
 angular
 .module('webui.services.rpc', [
   'webui.services.rpc.syscall', 'webui.services.configuration', 'webui.services.alerts',
-  'webui.services.utils'
+  'webui.services.storage'
 ])
 .factory('$rpc', [
-  '$syscall', '$globalTimeout', '$alerts', '$utils',
+  '$syscall', '$globalTimeout', '$alerts', 'aria.storage',
   '$rootScope', '$location', '$authconf',
-function(syscall, globalTimeout, alerts, utils, rootScope, uri, authconf) {
+function(syscall, globalTimeout, alerts, storage, rootScope, uri, authconf) {
 
   var subscriptions = []
     , configurations = [authconf]
@@ -15,9 +15,9 @@ function(syscall, globalTimeout, alerts, utils, rootScope, uri, authconf) {
     , timeout = null
     , forceNextUpdate = false;
 
-  var cookieConf = utils.getCookie('aria2conf');
-  // try at the start, so that it is presistant even when default authconf works
-  if(cookieConf) configurations.unshift(cookieConf);
+  var storedConf = storage.get('aria2conf');
+  // try at the start, so that it is persistent even when default authconf works
+  if(storedConf) configurations.unshift(storedConf);
 
   if (['http', 'https'].indexOf(uri.protocol()) != -1 && uri.host() != 'localhost') {
     console.log(uri.host());
@@ -113,7 +113,7 @@ function(syscall, globalTimeout, alerts, utils, rootScope, uri, authconf) {
         }
 
         if (configurations.length) {
-          // configuration worked, save it in cookie for next time and
+          // configuration worked, save it in storage for next time and
           // delete the pipelined configurations!!
           if (currentToken)
             alerts.addAlert('Successfully connected to Aria2 through its remote RPC …', 'success');
@@ -122,7 +122,7 @@ function(syscall, globalTimeout, alerts, utils, rootScope, uri, authconf) {
           configurations = [];
         }
 
-        utils.setCookie('aria2conf', currentConf);
+        storage.set('aria2conf', currentConf);
 
         var cbs = [];
         _.each(data.result, function(d, i) {

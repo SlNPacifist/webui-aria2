@@ -2,18 +2,18 @@ angular
 .module('webui.ctrls.nav', [
 	'webui.services.configuration', 'webui.services.modals',
 	'webui.services.rpc', 'webui.services.rpc.helpers',
-	'webui.services.settings', 'webui.services.utils'
+	'webui.services.settings', 'webui.services.storage'
 ])
 .controller('NavCtrl', [
 	'$scope', '$modals',
 	'$rpc', '$rpchelpers', '$fileSettings',
 	'$globalSettings', '$globalExclude',
-	'$utils', '$translate',
+	'aria.storage', '$translate',
 	function(
 		scope, modals,
 		rpc, rhelpers, fsettings,
 		gsettings, gexclude,
-		utils, translate
+		storage, translate
 	) {
 
 	scope.isFeatureEnabled = function(f) { return rhelpers.isFeatureEnabled(f) };
@@ -66,7 +66,7 @@ angular
 
 	scope.changeGSettings = function() {
 		rpc.once('getGlobalOption', [], function(data) {
-			var starred = utils.getCookie('aria2props');
+			var starred = storage.get('aria2props');
 			if (!starred || !starred.indexOf) starred = [];
 			var vals = data[0];
 			var settings = {};
@@ -116,7 +116,7 @@ angular
 				console.log('saving aria2 starred:', starred);
 
 				rpc.once('changeGlobalOption', [sets]);
-				utils.setCookie('aria2props', starred);
+				storage.set('aria2props', starred);
 			});
 		});
 	};
