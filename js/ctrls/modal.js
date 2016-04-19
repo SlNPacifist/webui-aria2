@@ -131,30 +131,6 @@ angular
     }
   };
 
-  scope.connection = {
-    open: function(defaults, cb) {
-      var self = this;
-
-      // XXX We need to actually clone this!
-      this.conf = rpc.getConfiguration();
-      this.inst = $modal.open({
-        templateUrl: "connection.html",
-        scope: scope,
-        windowClass: "modal-large",
-      });
-
-      this.inst.result.then(function() {
-        delete self.inst;
-        if (cb) {
-          cb(self.conf);
-        }
-      },
-      function() {
-        delete self.inst;
-      });
-    }
-  };
-
   _.each(['getTorrents', 'getMetalinks'], function(name) {
     scope[name] = {
       open: function(cb) {
