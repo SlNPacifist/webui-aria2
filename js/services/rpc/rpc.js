@@ -1,16 +1,15 @@
 angular
-.module('webui.services.rpc', ['ClientCreator'])
-.factory('$rpc', ['$globalTimeout', '$alerts', 'ClientCreator',
-function(globalTimeout, alerts, ClientCreator) {
-  ClientCreator.whenClientReady(function(client) {
-    client.enableThrottling(globalTimeout);
-  });
-
+.module('webui.services.rpc', ['ClientCreator', 'AriaLib'])
+.factory('$rpc', ['$globalTimeout', '$alerts', 'ClientCreator', 'AriaLib',
+function(globalTimeout, alerts, ClientCreator, AriaLib) {
   var subscriptions = [];
-  window.setInterval(updateSubscriptions, globalTimeout);
+  var clientCreateTimeout = 10000;
+  var client = null;
+  var state = 'noclient';
+  var forceNextSend = false;
+  var stateUpdateTimeout = setTimeout(updateState, globalTimeout);
 
   return {
-    // get currently configured directURL
     // TODO: move this to another place (like settings service)
     getDirectURL : function() { return '' },
     once: once,
@@ -18,59 +17,122 @@ function(globalTimeout, alerts, ClientCreator) {
     forceUpdate: forceUpdate
   };
 
-  // syscall is done only once, delay is optional
-  // and pass true to only dispatch it in the global timeout
-  // which can be used to batch up once calls
   function once(name, params, cb, delay) {
-    cb = cb || angular.noop;
-    params = params || [];
-    // TODO: process cases when no connection available
-    function makeRequest() {
-      ClientCreator.whenClientReady(function(client) {
-        client.call('aria2.' + name, params, function(err, res) {
-          if (err) {
-            console.error("Got an error for request:", name, params, err);
-            setTimeout(globalTimeout, makeRequest);
-          } else {
-            cb([res]);
-          }
-        });
-        if (!delay) {
-          forceUpdate();
-        }
-      });
+    subscriptions.push({
+      once: true,
+      name: 'aria2.' + name,
+      params: params || [],
+      callback: cb || angular.noop
+    });
+    if (!delay) {
+      forceUpdate();
     }
-    makeRequest();
   }
 
   // callback is called once in global timeout,
   function subscribe(name, params, cb) {
     subscriptions.push({
+      once: false,
       name: 'aria2.' + name,
       params: params || [],
-      cb: cb || angular.noop
+      callback: cb || angular.noop
     });
   }
 
-  function updateSubscriptions() {
-    ClientCreator.whenClientReady(function(client) {
-      subscriptions.forEach(function(s) {
-        client.call(s.name, s.params, function(err, res) {
-          if (err) {
-            console.error("Got error for subscription:", s.name, s.params, err);
-          } else {
-            s.cb([res]);
-          }
-        });
-      });
-    });
+  function resetUpdateTimeout(timeout) {
+    clearTimeout(stateUpdateTimeout);
+    stateUpdateTimeout = setTimeout(updateState, timeout);
   }
 
-  // force the global update
+  function updateState() {
+    switch (state) {
+      case 'noclient':
+        createClient();
+        break;
+      case 'creatingclient':
+        break;
+      case 'idle':
+        sendRequest();
+        break;
+      case 'waitingresult':
+        break;
+    }
+    resetUpdateTimeout(globalTimeout);
+  }
+
   function forceUpdate() {
-    ClientCreator.whenClientReady(function(client) {
-      client.disableThrottling();
-      client.enableThrottling(globalTimeout);
+    if (state == 'idle') {
+      resetUpdateTimeout(0);
+    } else {
+      forceNextSend = true;
+    }
+  }
+
+  function createClient() {
+    state = 'creatingclient';
+    console.log("Creating client");
+    ClientCreator.fromCurrentOptions(function(transport) {
+      if (transport) {
+        state = 'idle';
+        console.log("Client created");
+        client = new AriaLib.AriaClient(transport);
+        resetUpdateTimeout(0);
+        transport.on('error', function() {
+          state = 'noclient';
+          console.error("Transport got an error");
+          client.cancelAllRequests();
+          client = null;
+          resetUpdateTimeout(clientCreateTimeout);
+        });
+      } else {
+        state = 'noclient';
+      }
+    });
+  }
+
+  function collectRequest(subs) {
+    return subs.map(function(sub) {
+      return {
+        methodName: sub.name,
+        params: sub.params
+      }
+    });
+  }
+
+  function sendRequest() {
+    if (subscriptions.length == 0) {
+      return;
+    }
+    state = 'waitingresult';
+    var currentSubs = subscriptions.slice();
+    var request = collectRequest(currentSubs);
+    console.log("Sending " + currentSubs.length + " requests");
+    client.system.multicall(request, function(err, res) {
+      if (err) {
+        state = 'idle';
+        console.log("Got error for requests", err);
+        return;
+      }
+      console.log("Got response for request");
+      res.forEach(function(curResult, index) {
+        var sub = currentSubs[index];
+        if (!Array.isArray(curResult)) {
+          console.error("Request", sub.name, "got error", curResult);
+        }
+        sub.callback(curResult);
+        if (sub.once) {
+          currentSubs[index].finished = true;
+        }
+      });
+      subscriptions = subscriptions.filter(function(sub) {
+        return !sub.finished;
+      });
+      state = 'idle';
+      if (forceNextSend) {
+        forceNextSend = false;
+        console.log("Forcing next send");
+        resetUpdateTimeout(0);
+      }
     });
   }
 }]);
