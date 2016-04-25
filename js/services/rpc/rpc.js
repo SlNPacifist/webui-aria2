@@ -1,7 +1,7 @@
 angular
-.module('webui.services.rpc', ['ClientCreator', 'AriaLib'])
-.factory('$rpc', ['$globalTimeout', '$alerts', 'ClientCreator', 'AriaLib',
-function(globalTimeout, alerts, ClientCreator, AriaLib) {
+.module('webui.services.rpc', ['external'])
+.factory('$rpc', ['$globalTimeout', '$alerts', 'TransportCreator', 'AriaLib',
+function(globalTimeout, alerts, TransportCreator, AriaLib) {
   var subscriptions = [];
   var clientCreateTimeout = 10000;
   var client = null;
@@ -71,7 +71,7 @@ function(globalTimeout, alerts, ClientCreator, AriaLib) {
   function createClient() {
     state = 'creatingclient';
     console.log("Creating client");
-    ClientCreator.fromCurrentOptions(function(transport) {
+    TransportCreator.fromCurrentOptions(function(transport) {
       if (transport) {
         state = 'idle';
         console.log("Client created");
