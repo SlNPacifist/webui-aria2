@@ -49,7 +49,7 @@ $(function() {
     });
   }
 
-  require(['/common/aria_client.js', '/common/transport_creator.js', '/common/options.js'],
+  require(['/libs/aria_client.js', '/common/transport_creator.js', '/common/options.js'],
   function(AriaLib, TransportCreator, Options) {
     angular
       .module('external', [])
