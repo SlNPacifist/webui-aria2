@@ -48,5 +48,15 @@ $(function() {
           }
     });
   }
-  angular.bootstrap(document, ['webui'])
+
+  require(['/common/aria_client.js', '/common/transport_creator.js', '/common/options.js'],
+  function(AriaLib, TransportCreator, Options) {
+    angular
+      .module('external', [])
+      .value('AriaLib', AriaLib)
+      .value('TransportCreator', TransportCreator)
+      .value('options', Options);
+
+    angular.bootstrap(document, ['webui']);
+  });
 });
