@@ -23,8 +23,7 @@
   <!-- external javascript dependencies -->
   <script src="js/libs/jquery-2.1.3.js"></script>
   <script src="js/libs/lodash.js"></script>
-
-  <script src="js/libs/angular.js"></script>
+  <script src="../libs/angular.js"></script>
 
   <script src="js/libs/angularui-bootstrap.js"></script>
 
@@ -37,9 +36,6 @@
   -->
 
   <!-- webui core -->
-  <script src="js/init.js"></script>
-  <script src="configuration.js"></script>
-
   <script src="js/directives/chunkbar.js"></script>
   <script src="js/directives/dgraph.js"></script>
   <script src="js/directives/fselect.js"></script>
@@ -60,9 +56,6 @@
   <script src="js/services/settings/settings.js"></script>
   <script src="js/services/settings/filters.js"></script>
 
-  <script src="js/services/rpc/jsoncall.js"></script>
-  <script src="js/services/rpc/sockcall.js"></script>
-  <script src="js/services/rpc/syscall.js"></script>
   <script src="js/services/rpc/rpc.js"></script>
   <script src="js/services/rpc/helpers.js"></script>
 
@@ -83,6 +76,10 @@
   <script src="js/translate/pl_PL.js"></script>
   <script src="js/translate/fr_FR.js"></script>
   <script src="js/translate/de_DE.js"></script>
+
+  <script src="../libs/require.js"></script>
+  <script src="js/init.js"></script>
+  <script src="configuration.js"></script>
 </head>
 <!-- }}} -->
 
@@ -260,7 +257,7 @@
               <a
                       ng-click="changeLanguage('de_DE')"
                       href="#"><span class="fa fa-fw flag-icon flag-icon-de">&nbsp;</span> Deutsch</a>
-            </li>			
+            </li>
           </ul>
         </li>
       </ul>
@@ -975,128 +972,6 @@ http://ex1.com/f2.mp4 http://ex2.com/f2.mp4 --out=file2.mp4
   </div>
 </script>
 <!-- }}} -->
-
-<!--{{{ connection modal -->
-<script type="text/ng-template" id="connection.html">
-  <div class="modal-header">
-    <button class="close" ng-click="$dismiss()">x</button>
-    <h4>{{ 'Connection Settings' | translate }}</h4>
-  </div>
-  <div class="modal-body">
-    <form class="form-horizontal">
-      <fieldset>
-        <legend>{{ 'Aria2 RPC host and port' | translate }}</legend>
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter the host' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <div class="input-group">
-              <span class="input-group-addon">http(s)://</span>
-              <input type="text" class="form-control input-xlarge"
-                ng-model="connection.conf.host"/>
-            </div>
-            <p class="help-block">
-          {{ 'Enter the IP or DNS name of the server on which the RPC for Aria2 is running (default: localhost)' | translate }}
-            </p>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter the port' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <input type="text" class="form-control input-xlarge modal-form-input-number"
-              ng-model="connection.conf.port"/>
-            <p class="help-block">
-          {{ 'Enter the port of the server on which the RPC for Aria2 is running (default: 6800)' | translate }}
-            </p>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter the RPC path' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <div class="input-group">
-			  <span class="input-group-addon">http(s)://{{connection.conf.host + ':' + connection.conf.port}}</span>
-              <input type="text" class="form-control input-xlarge"
-                ng-model="connection.conf.path"/>
-            </div>
-            <p class="help-block">
-          {{ 'Enter the path for the Aria2 RPC endpoint (default: /jsonrpc)' | translate }}
-            </p>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'SSL/TLS encryption' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <div class="checkbox">
-              <label>
-                <input type="checkbox" ng-model="connection.conf.encrypt"/>
-                {{ 'Enable SSL/TLS encryption' | translate }}
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter the secret token (optional)' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <label>
-              <input type="text" class="form-control input-xlarge" ng-model="connection.conf.auth.token"/>
-              <p class="help-block">
-          {{ 'Enter the Aria2 RPC secret token (leave empty if authentication is not enabled)' | translate }}
-              </p>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter the username (optional)' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <input type="text" class="form-control input-xlarge"
-              ng-model="connection.conf.auth.user"/>
-            <p class="help-block">
-          {{ 'Enter the Aria2 RPC username (empty if authentication not enabled)' | translate }}
-            </p>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter the password (optional)' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <input type="password" class="form-control input-xlarge"
-              ng-model="connection.conf.auth.pass"/>
-            <p class="help-block">
-          {{ 'Enter the Aria2 RPC password (empty if authentication not enabled)' | translate }}
-            </p>
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>{{ 'Direct Download' | translate }}</legend>
-        <div class="form-group">
-          <label class="col-sm-3 control-label">{{ 'Enter base URL (optional)' | translate }}:</label>
-          <div class="col-sm-9 controls">
-            <input type="text" class="form-control input-xlarge"
-              ng-model="connection.conf.directURL"/>
-            <p class="help-block">
-              {{ 'If supplied, links will be created to enable direct download from the Aria2 server.' | translate }}<br />
-              {{ '(Requires an appropriate webserver to be configured.)' | translate }}
-            </p>
-          </div>
-        </div>
-      </fieldset>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button href="#" class="btn btn-default" ng-click="$dismiss()">{{ 'Cancel' | translate }}</button>
-    <button href="#" class="btn btn-default btn-primary" ng-click="$close()">
-      {{ 'Save Connection configuration' | translate }}
-    </button>
-  </div>
-</script>
-<!-- }}} -->
-
 
 <!-- {{{ server info modal -->
 <script type="text/ng-template" id="server_info.html">

@@ -59,9 +59,7 @@ angular
 	};
 
 	scope.changeCSettings = function() {
-		modals.invoke(
-			'connection', rpc.getConfiguration(), _.bind(rpc.configure, rpc)
-		);
+    chrome.runtime.openOptionsPage();
 	}
 
 	scope.changeGSettings = function() {
