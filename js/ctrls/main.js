@@ -401,6 +401,8 @@ function(
 			};
 		}
 		else {
+		    if (ctx.gid !== d.gid)
+		        ctx.files = [];
 			ctx.dir = d.dir;
 			ctx.status = d.status;
 			ctx.errorCode = d.errorCode;
@@ -589,5 +591,11 @@ function(
 
 		return false;
 	}
+	scope.moveDown = function (d) {
+	    rpc.once('changePosition', [d.gid, 1, 'POS_CUR']);
+	};
+	scope.moveUp = function (d) {
+	    rpc.once('changePosition', [d.gid, -1, 'POS_CUR']);
+	};
 
 }]);
